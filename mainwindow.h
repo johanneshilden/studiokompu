@@ -3,13 +3,13 @@
 
 #include <QtGui/QMainWindow>
 
-class QActionGroup;
+class QUndoStack;
 class CompNodeItem;
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    
+
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -25,6 +25,7 @@ private:
     QAction *m_insertLegAction;
     QAction *m_coordinateAction;
     QAction *m_debugDumpAction;
+    QUndoStack *m_undoStack;
 };
 
 #endif // MAINWINDOW_H
