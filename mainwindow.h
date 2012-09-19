@@ -3,7 +3,6 @@
 
 #include <QtGui/QMainWindow>
 
-class QActionGroup;
 class CompNodeItem;
 
 class MainWindow : public QMainWindow
