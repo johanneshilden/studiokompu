@@ -37,6 +37,7 @@ public:
     ~CompNodeItem();
 
     bool isLeaf() const;
+    bool isValid() const;
 
     int compute() const;
     int compute(QList<int> args) const;
@@ -50,10 +51,11 @@ public:
     CompNodeItem::NodeType nodeType() const;
 
     inline QList<CompNodeItem *> childNodes() const { return m_childNodes; }
-    CompNodeItem *replaceChildNode(CompNodeItem *old, struct node *node);
-    void insertChildNode(int i, struct node *node);
 
 private:
+    friend class ReplaceNodeCommand;
+    friend class InsertNodeCommand;
+
     void buildCompositionNodeLegs();
     void buildRecursionNodeLegs();
     void buildSearchNodeLeg();

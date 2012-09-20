@@ -6,10 +6,15 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QDialogButtonBox>
+#include <QUndoStack>
 #include <QDebug>
+#include <QUndoView>
 #include "compnodeitem.h"
 #include "compgraphicsscene.h"
 #include "compwidget.h"
+#include "commands/replacenodecommand.h"
+#include "commands/insertnodecommand.h"
+#include "commands/setprojectioncoordcommand.h"
 
 CompProjectionDialog::CompProjectionDialog(int place, QWidget *parent)
     : QDialog(parent),
@@ -44,6 +49,7 @@ CompWidget::CompWidget(QWidget *parent)
       m_computeButton(new QPushButton(tr("Compute"))),
       m_input(new QLineEdit),
       m_logWindow(new QPlainTextEdit),
+      m_undoStack(new QUndoStack(this)),
       m_topNode(new CompNodeItem(invalid_node_new()))
 {
     m_scene->addItem(m_topNode);
@@ -69,6 +75,8 @@ CompWidget::CompWidget(QWidget *parent)
     layout->addWidget(m_logWindow);
     layout->addWidget(view);
 
+    layout->addWidget(new QUndoView(m_undoStack));
+
     setMinimumSize(300, 300);
 
     connect(m_computeButton, SIGNAL(clicked()), this, SLOT(compute()));
@@ -81,11 +89,7 @@ CompWidget::~CompWidget()
 
 bool CompWidget::treeIsValid() const
 {
-    if (!m_topNode)
-        return false;
-
-    // @todo
-    return false;
+    return (m_topNode && m_topNode->isValid());
 }
 
 bool CompWidget::eventFilter(QObject *object, QEvent *event)
@@ -199,7 +203,9 @@ void CompWidget::insertNodeLeg()
     if (!nodeItem || CompNodeItem::CompositionNode != nodeItem->nodeType())
         return;
 
-    nodeItem->insertChildNode(0, invalid_node_new());
+    m_undoStack->push(new InsertNodeCommand(this,
+                                            new CompNodeItem(invalid_node_new()),
+                                            nodeItem, 0));
 }
 
 void CompWidget::dumpNode()
@@ -229,10 +235,9 @@ void CompWidget::showProjectionDialog()
 
     struct node_projection *proj = (struct node_projection *) nodeItem->node()->data;
     CompProjectionDialog dialog(proj->place);
-
     if (QDialog::Accepted == dialog.exec()) {
-        proj->place = dialog.val() - 1;
-        m_scene->update();
+        SetProjectionCoordCommand *command = new SetProjectionCoordCommand(nodeItem, dialog.val() - 1);
+        m_undoStack->push(command);
     }
 }
 
@@ -249,23 +254,6 @@ void CompWidget::replaceSelectedNode(struct node *node)
         return;
     }
 
-    CompNodeItem *parentNode = static_cast<CompNodeItem *>(nodeItem->parentItem());
-    CompNodeItem *item;
-
-    if (parentNode) {
-        item = parentNode->replaceChildNode(nodeItem, node);
-        if (!item)
-            return;
-    } else {
-        item = new CompNodeItem(node);
-        m_scene->removeItem(nodeItem);
-        item->setPos(nodeItem->pos());
-        item->setScale(nodeItem->scale());
-        m_scene->addItem(item);
-        delete nodeItem;
-        item->setSelected(true);
-        m_topNode = item;
-    }
-    item->setSelected(true);
-    item->scene()->update();
+    ReplaceNodeCommand *command = new ReplaceNodeCommand(this, nodeItem, new CompNodeItem(node));
+    m_undoStack->push(command);
 }

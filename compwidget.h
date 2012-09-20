@@ -22,6 +22,7 @@ class CompGraphicsScene;
 class QPushButton;
 class QLineEdit;
 class QPlainTextEdit;
+class QUndoStack;
 class CompNodeItem;
 
 class CompWidget : public QWidget
@@ -33,6 +34,8 @@ public:
     ~CompWidget();
 
     bool treeIsValid() const;
+    inline QUndoStack *undoStack() const { return m_undoStack; }
+    inline void setTopNode(CompNodeItem *node) { m_topNode = node; }
 
 protected:
     bool eventFilter(QObject *object, QEvent *event);
@@ -63,6 +66,7 @@ private:
     QPushButton       *const m_computeButton;
     QLineEdit         *const m_input;
     QPlainTextEdit    *const m_logWindow;
+    QUndoStack        *const m_undoStack;
     CompNodeItem      *m_topNode;
 };
 
