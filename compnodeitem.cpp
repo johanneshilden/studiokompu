@@ -145,37 +145,46 @@ QRectF CompNodeItem::boundingRect() const
 
 void CompNodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
+    QPen pen;
     if (isSelected())
-        painter->setPen(Qt::cyan);
+        pen.setColor(Qt::cyan);
 
-    painter->drawRect(boundingRect());
+    painter->setPen(pen);
 
     switch (nodeType())
     {
     case ZeroNode:
+        painter->drawRect(boundingRect());
         painter->drawText(0, 0, "Z");
         break;
     case ProjectionNode:
     {
+        painter->drawRect(boundingRect());
         struct node_projection *proj = (struct node_projection *) node()->data;
         painter->drawText(0, 0, QString("P:%1").arg(proj->place + 1));
         break;
     }
     case SuccessorNode:
+        painter->drawRect(boundingRect());
         painter->drawText(0, 0, "+");
         break;
     case CompositionNode:
+        painter->drawRect(boundingRect());
         painter->drawText(0, 0, "C");
         break;
     case RecursionNode:
+        painter->drawRect(boundingRect());
         painter->drawText(0, 0, "R");
         break;
     case SearchNode:
+        painter->drawRect(boundingRect());
         painter->drawText(0, 0, "S");
         break;
     case InvalidNode:
     default:
-        painter->drawText(0, 0, "-");
+        pen.setStyle(Qt::DashLine);
+        painter->setPen(pen);
+        painter->drawRect(boundingRect());
         break;
     } // end switch
 }

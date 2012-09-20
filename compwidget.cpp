@@ -50,7 +50,8 @@ CompWidget::CompWidget(QWidget *parent)
       m_input(new QLineEdit),
       m_logWindow(new QPlainTextEdit),
       m_undoStack(new QUndoStack(this)),
-      m_topNode(new CompNodeItem(invalid_node_new()))
+      m_topNode(new CompNodeItem(invalid_node_new())),
+      m_valid(false)
 {
     m_scene->addItem(m_topNode);
     m_scene->installEventFilter(this);
@@ -81,15 +82,20 @@ CompWidget::CompWidget(QWidget *parent)
 
     connect(m_computeButton, SIGNAL(clicked()), this, SLOT(compute()));
     connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(emitSelectionChanged()));
+    connect(this, SIGNAL(validStateChanged(bool)), m_computeButton, SLOT(setEnabled(bool)));
+
+    emit validStateChanged(m_topNode && m_topNode->isValid());
 }
 
 CompWidget::~CompWidget()
 {
 }
 
-bool CompWidget::treeIsValid() const
+void CompWidget::validate()
 {
-    return (m_topNode && m_topNode->isValid());
+    bool v = m_topNode && m_topNode->isValid();
+    if (v != m_valid)
+        emit validStateChanged(m_valid = v);
 }
 
 bool CompWidget::eventFilter(QObject *object, QEvent *event)

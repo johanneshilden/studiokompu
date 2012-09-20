@@ -33,15 +33,16 @@ public:
     explicit CompWidget(QWidget *parent = 0);
     ~CompWidget();
 
-    bool treeIsValid() const;
     inline QUndoStack *undoStack() const { return m_undoStack; }
-    inline void setTopNode(CompNodeItem *node) { m_topNode = node; }
+    inline void setTopNode(CompNodeItem *node) { m_topNode = node; validate(); }
+    void validate();
 
 protected:
     bool eventFilter(QObject *object, QEvent *event);
 
 signals:
     void selectionChanged(CompNodeItem *);
+    void validStateChanged(bool);
 
 protected slots:
     void insertZeroNode();
@@ -68,6 +69,7 @@ private:
     QPlainTextEdit    *const m_logWindow;
     QUndoStack        *const m_undoStack;
     CompNodeItem      *m_topNode;
+    bool               m_valid;
 };
 
 #endif // COMPWIDGET_H

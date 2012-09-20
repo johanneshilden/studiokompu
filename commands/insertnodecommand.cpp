@@ -2,6 +2,7 @@
 #include <QDebug>
 #include "insertnodecommand.h"
 #include "compnodeitem.h"
+#include "compwidget.h"
 
 InsertNodeCommand::InsertNodeCommand(CompWidget *widget, CompNodeItem *item, CompNodeItem *parentItem, int n, QUndoCommand *parent)
     : QUndoCommand(parent),
@@ -84,4 +85,5 @@ void InsertNodeCommand::rebuild()
     }
 
     m_parent->buildCompositionNodeLegs();
+    m_widget->validate();
 }

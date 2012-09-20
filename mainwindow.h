@@ -21,9 +21,9 @@ protected slots:
 private:
     void disableAllActions();
 
-    QToolBar *const  m_toolBar;
+    QToolBar   *const m_toolBar;
     CompWidget *const m_compWidget;
-    QList<QAction *> m_nodeActions;
+    QList<QAction *>  m_nodeActions;
     QAction *m_insertLegAction;
     QAction *m_coordinateAction;
     QAction *m_debugDumpAction;
