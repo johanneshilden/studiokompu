@@ -3,8 +3,8 @@
 
 #include <QtGui/QMainWindow>
 
-class QUndoStack;
 class CompNodeItem;
+class CompWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -16,16 +16,17 @@ public:
 
 protected slots:
     void updateActions(CompNodeItem *selectedItem);
+    void clearUndoStack();
 
 private:
     void disableAllActions();
 
     QToolBar *const  m_toolBar;
+    CompWidget *const m_compWidget;
     QList<QAction *> m_nodeActions;
     QAction *m_insertLegAction;
     QAction *m_coordinateAction;
     QAction *m_debugDumpAction;
-    QUndoStack *m_undoStack;
 };
 
 #endif // MAINWINDOW_H

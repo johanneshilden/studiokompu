@@ -15,12 +15,14 @@ SOURCES += main.cpp\
     lib/comp.c \
     compnodeitem.cpp \
     compgraphicsscene.cpp \
-    compwidget.cpp
+    compwidget.cpp \
+    commands/replacenodecommand.cpp
 
 HEADERS  += mainwindow.h \
     compnodeitem.h \
     lib/comp.h \
     compgraphicsscene.h \
-    compwidget.h
+    compwidget.h \
+    commands/replacenodecommand.h
 
 #QMAKE_CXXFLAGS += -std=c++0x

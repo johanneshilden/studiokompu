@@ -164,54 +164,6 @@ CompNodeItem::NodeType CompNodeItem::nodeType() const
     return static_cast<CompNodeItem::NodeType>(m_node->type);
 }
 
-CompNodeItem *CompNodeItem::replaceChildNode(CompNodeItem *old, struct node *node)
-{
-    const int n = childNodes().indexOf(old);
-    if (-1 == n) {
-        node_destroy(node);
-        return 0;
-    }
-
-    old->scene()->removeItem(old);
-
-    CompNodeItem *item = new CompNodeItem(node, this);
-    item->setScale(old->scale());
-    item->setPos(old->pos());
-
-    m_childNodes.replace(n, item);
-
-    switch (nodeType())
-    {
-    case CompNodeItem::CompositionNode:
-    {
-        struct node_composition *comp = (struct node_composition *) m_node->data;
-        assert(n <= comp->places);
-        (n ? comp->g[n - 1] : comp->f) = node;
-        break;
-    }
-    case CompNodeItem::RecursionNode:
-    {
-        assert(n < 2);
-        struct node_recursion *rec = (struct node_recursion *) m_node->data;
-        (n ? rec->g : rec->f) = node;
-        break;
-    }
-    case CompNodeItem::SearchNode:
-    {
-        assert(0 == n);
-        struct node_search *search = (struct node_search *) m_node->data;
-        search->p = node;
-        break;
-    }
-    default:
-        qWarning() << "Invalid node type in CompNodeItem::replaceChildNode";
-        break;
-    }
-
-    delete old;
-    return item;
-}
-
 void CompNodeItem::insertChildNode(int i, struct node *node)
 {
     if (CompNodeItem::CompositionNode != nodeType()) {

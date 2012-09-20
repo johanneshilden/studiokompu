@@ -1,16 +1,17 @@
 #include <QDebug>
 #include <QToolBar>
 #include <QAction>
+#include <QUndoStack>
 #include "mainwindow.h"
 #include "compwidget.h"
 #include "compnodeitem.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
-      m_toolBar(addToolBar("default"))
+      m_toolBar(addToolBar("default")),
+      m_compWidget(new CompWidget)
 {
-    CompWidget *widget = new CompWidget;
-    setCentralWidget(widget);
+    setCentralWidget(m_compWidget);
 
     //
 
@@ -29,6 +30,10 @@ MainWindow::MainWindow(QWidget *parent)
     m_coordinateAction = m_toolBar->addAction("X");
     m_toolBar->addSeparator();
     m_debugDumpAction  = m_toolBar->addAction("dmp");
+    m_toolBar->addSeparator();
+    QAction *undoAction = m_toolBar->addAction(tr("Undo"));
+    QAction *redoAction = m_toolBar->addAction(tr("Redo"));
+    QAction *clearStackAction = m_toolBar->addAction("Clear stack");
 
     m_nodeActions.push_back(zeroAction);
     m_nodeActions.push_back(projAction);
@@ -38,24 +43,25 @@ MainWindow::MainWindow(QWidget *parent)
     m_nodeActions.push_back(srchAction);
     m_nodeActions.push_back(invlAction);
 
-    connect(zeroAction, SIGNAL(triggered()), widget, SLOT(insertZeroNode()));
-    connect(projAction, SIGNAL(triggered()), widget, SLOT(insertProjectionNode()));
-    connect(succAction, SIGNAL(triggered()), widget, SLOT(insertSuccNode()));
-    connect(compAction, SIGNAL(triggered()), widget, SLOT(insertCompositionNode()));
-    connect(recuAction, SIGNAL(triggered()), widget, SLOT(insertRecursionNode()));
-    connect(srchAction, SIGNAL(triggered()), widget, SLOT(insertSearchNode()));
-    connect(invlAction, SIGNAL(triggered()), widget, SLOT(insertInvalidNode()));
+    connect(zeroAction, SIGNAL(triggered()), m_compWidget, SLOT(insertZeroNode()));
+    connect(projAction, SIGNAL(triggered()), m_compWidget, SLOT(insertProjectionNode()));
+    connect(succAction, SIGNAL(triggered()), m_compWidget, SLOT(insertSuccNode()));
+    connect(compAction, SIGNAL(triggered()), m_compWidget, SLOT(insertCompositionNode()));
+    connect(recuAction, SIGNAL(triggered()), m_compWidget, SLOT(insertRecursionNode()));
+    connect(srchAction, SIGNAL(triggered()), m_compWidget, SLOT(insertSearchNode()));
+    connect(invlAction, SIGNAL(triggered()), m_compWidget, SLOT(insertInvalidNode()));
 
-    connect(m_insertLegAction, SIGNAL(triggered()), widget, SLOT(insertNodeLeg()));
-    connect(m_coordinateAction, SIGNAL(triggered()), widget, SLOT(showProjectionDialog()));
-    connect(m_debugDumpAction, SIGNAL(triggered()), widget, SLOT(dumpNode()));
+    connect(m_insertLegAction, SIGNAL(triggered()), m_compWidget, SLOT(insertNodeLeg()));
+    connect(m_coordinateAction, SIGNAL(triggered()), m_compWidget, SLOT(showProjectionDialog()));
+    connect(m_debugDumpAction, SIGNAL(triggered()), m_compWidget, SLOT(dumpNode()));
 
-    connect(widget, SIGNAL(selectionChanged(CompNodeItem *)), this, SLOT(updateActions(CompNodeItem *)));
+    connect(undoAction, SIGNAL(triggered()), m_compWidget->undoStack(), SLOT(undo()));
+    connect(redoAction, SIGNAL(triggered()), m_compWidget->undoStack(), SLOT(redo()));
+    connect(clearStackAction, SIGNAL(triggered()), this, SLOT(clearUndoStack()));
+
+    connect(m_compWidget, SIGNAL(selectionChanged(CompNodeItem *)), this, SLOT(updateActions(CompNodeItem *)));
 
     updateActions(0);
-
-
-    //
 }
 
 MainWindow::~MainWindow()
@@ -80,12 +86,15 @@ void MainWindow::updateActions(CompNodeItem *selectedItem)
     m_insertLegAction->setEnabled(CompNodeItem::CompositionNode == type);
 }
 
+void MainWindow::clearUndoStack()
+{
+    m_compWidget->undoStack()->clear();
+}
+
 void MainWindow::disableAllActions()
 {
     QList<QAction *> actions = m_toolBar->actions();
     QList<QAction *>::const_iterator i;
-    for (i = actions.constBegin(); i != actions.constEnd(); ++i) {
-        QAction *action = *i;
-        action->setEnabled(false);
-    }
+    for (i = actions.constBegin(); i != actions.constEnd() - 3; ++i)
+        (*i)->setEnabled(false);
 }

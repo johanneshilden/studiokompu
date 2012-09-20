@@ -6,10 +6,13 @@
 #include <QPushButton>
 #include <QSpinBox>
 #include <QDialogButtonBox>
+#include <QUndoStack>
 #include <QDebug>
+#include <QUndoView>
 #include "compnodeitem.h"
 #include "compgraphicsscene.h"
 #include "compwidget.h"
+#include "commands/replacenodecommand.h"
 
 CompProjectionDialog::CompProjectionDialog(int place, QWidget *parent)
     : QDialog(parent),
@@ -44,7 +47,9 @@ CompWidget::CompWidget(QWidget *parent)
       m_computeButton(new QPushButton(tr("Compute"))),
       m_input(new QLineEdit),
       m_logWindow(new QPlainTextEdit),
+      m_undoStack(new QUndoStack(this)),
       m_topNode(new CompNodeItem(invalid_node_new()))
+//      m_topNode(new CompNodeItem(recursion_node_new(invalid_node_new(), invalid_node_new())))
 {
     m_scene->addItem(m_topNode);
     m_scene->installEventFilter(this);
@@ -68,6 +73,8 @@ CompWidget::CompWidget(QWidget *parent)
     layout->addLayout(inputLayout);
     layout->addWidget(m_logWindow);
     layout->addWidget(view);
+
+    layout->addWidget(new QUndoView(m_undoStack));
 
     setMinimumSize(300, 300);
 
@@ -249,23 +256,6 @@ void CompWidget::replaceSelectedNode(struct node *node)
         return;
     }
 
-    CompNodeItem *parentNode = static_cast<CompNodeItem *>(nodeItem->parentItem());
-    CompNodeItem *item;
-
-    if (parentNode) {
-        item = parentNode->replaceChildNode(nodeItem, node);
-        if (!item)
-            return;
-    } else {
-        item = new CompNodeItem(node);
-        m_scene->removeItem(nodeItem);
-        item->setPos(nodeItem->pos());
-        item->setScale(nodeItem->scale());
-        m_scene->addItem(item);
-        delete nodeItem;
-        item->setSelected(true);
-        m_topNode = item;
-    }
-    item->setSelected(true);
-    item->scene()->update();
+    ReplaceNodeCommand *command = new ReplaceNodeCommand(this, nodeItem, new CompNodeItem(node));
+    m_undoStack->push(command);
 }

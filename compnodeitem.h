@@ -50,10 +50,11 @@ public:
     CompNodeItem::NodeType nodeType() const;
 
     inline QList<CompNodeItem *> childNodes() const { return m_childNodes; }
-    CompNodeItem *replaceChildNode(CompNodeItem *old, struct node *node);
     void insertChildNode(int i, struct node *node);
 
 private:
+    friend class ReplaceNodeCommand;
+
     void buildCompositionNodeLegs();
     void buildRecursionNodeLegs();
     void buildSearchNodeLeg();
