@@ -98,6 +98,32 @@ bool CompNodeItem::isLeaf() const
          || InvalidNode    == type);
 }
 
+bool CompNodeItem::isValid() const
+{
+    switch (nodeType())
+    {
+    case ZeroNode:
+        return true;
+    case ProjectionNode:
+        return true;
+    case SuccessorNode:
+        return true;
+    case CompositionNode:
+    case RecursionNode:
+    case SearchNode:
+    {
+        QList<CompNodeItem *>::const_iterator i;
+        for (i = m_childNodes.constBegin(); i != m_childNodes.constEnd(); ++i)
+            if (!(*i)->isValid())
+                return false;
+        return true;
+    }
+    case InvalidNode:
+    default:
+        return false;
+    } // end switch
+}
+
 int CompNodeItem::compute() const
 {
     return node_compute(m_node, NULL, 0);
@@ -162,46 +188,6 @@ int CompNodeItem::type() const
 CompNodeItem::NodeType CompNodeItem::nodeType() const
 {
     return static_cast<CompNodeItem::NodeType>(m_node->type);
-}
-
-void CompNodeItem::insertChildNode(int i, struct node *node)
-{
-    if (CompNodeItem::CompositionNode != nodeType()) {
-        node_destroy(node);
-        return;
-    }
-
-    struct node_composition *comp = (struct node_composition *) m_node->data;
-    struct node **g = comp->g;
-    struct node **h = node_array_new(comp->places + 2);
-
-    int j;
-    for (j = 0; j < comp->places + 1; ++j) {
-        if (i == j) {
-            h[j] = node;
-        } else {
-            h[j] = *g;
-            ++g;
-        }
-    }
-    h[j] = NULL;
-    free(comp->g);
-    comp->g = h;
-    ++comp->places;
-
-    m_childNodes.insert(i + 1, new CompNodeItem(node, this));
-
-    QList<QGraphicsItem *> items = childItems();
-    QList<QGraphicsItem *>::const_iterator k;
-    for (k = items.constBegin(); k != items.constEnd(); ++k) {
-        QGraphicsItem *it = *k;
-        if (!qgraphicsitem_cast<CompNodeItem *>(it)) {
-            // Item is not a CompNodeItem
-            it->scene()->removeItem(it);
-            delete it;
-        }
-    }
-    buildCompositionNodeLegs();
 }
 
 void CompNodeItem::buildCompositionNodeLegs()

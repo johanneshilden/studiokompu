@@ -13,6 +13,8 @@
 #include "compgraphicsscene.h"
 #include "compwidget.h"
 #include "commands/replacenodecommand.h"
+#include "commands/insertnodecommand.h"
+#include "commands/setprojectioncoordcommand.h"
 
 CompProjectionDialog::CompProjectionDialog(int place, QWidget *parent)
     : QDialog(parent),
@@ -49,7 +51,6 @@ CompWidget::CompWidget(QWidget *parent)
       m_logWindow(new QPlainTextEdit),
       m_undoStack(new QUndoStack(this)),
       m_topNode(new CompNodeItem(invalid_node_new()))
-//      m_topNode(new CompNodeItem(recursion_node_new(invalid_node_new(), invalid_node_new())))
 {
     m_scene->addItem(m_topNode);
     m_scene->installEventFilter(this);
@@ -88,11 +89,7 @@ CompWidget::~CompWidget()
 
 bool CompWidget::treeIsValid() const
 {
-    if (!m_topNode)
-        return false;
-
-    // @todo
-    return false;
+    return (m_topNode && m_topNode->isValid());
 }
 
 bool CompWidget::eventFilter(QObject *object, QEvent *event)
@@ -206,7 +203,9 @@ void CompWidget::insertNodeLeg()
     if (!nodeItem || CompNodeItem::CompositionNode != nodeItem->nodeType())
         return;
 
-    nodeItem->insertChildNode(0, invalid_node_new());
+    m_undoStack->push(new InsertNodeCommand(this,
+                                            new CompNodeItem(invalid_node_new()),
+                                            nodeItem, 0));
 }
 
 void CompWidget::dumpNode()
@@ -236,10 +235,9 @@ void CompWidget::showProjectionDialog()
 
     struct node_projection *proj = (struct node_projection *) nodeItem->node()->data;
     CompProjectionDialog dialog(proj->place);
-
     if (QDialog::Accepted == dialog.exec()) {
-        proj->place = dialog.val() - 1;
-        m_scene->update();
+        SetProjectionCoordCommand *command = new SetProjectionCoordCommand(nodeItem, dialog.val() - 1);
+        m_undoStack->push(command);
     }
 }
 

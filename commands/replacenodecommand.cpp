@@ -77,6 +77,8 @@ CompNodeItem *ReplaceNodeCommand::switchNodes(CompNodeItem *old, CompNodeItem *n
         m_widget->setTopNode(neue);
     }
 
+    foreach (QGraphicsItem *item, scene->selectedItems())
+        item->setSelected(false);
     neue->setSelected(true);
     scene->update();
     return old;
