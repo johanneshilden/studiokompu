@@ -18,7 +18,9 @@ SOURCES += main.cpp\
     compwidget.cpp \
     commands/replacenodecommand.cpp \
     commands/insertnodecommand.cpp \
-    commands/setprojectioncoordcommand.cpp
+    commands/setprojectioncoordcommand.cpp \
+    complibwidget.cpp \
+    complibmodel.cpp
 
 HEADERS  += mainwindow.h \
     compnodeitem.h \
@@ -27,6 +29,8 @@ HEADERS  += mainwindow.h \
     compwidget.h \
     commands/replacenodecommand.h \
     commands/insertnodecommand.h \
-    commands/setprojectioncoordcommand.h
+    commands/setprojectioncoordcommand.h \
+    complibwidget.h \
+    complibmodel.h
 
 #QMAKE_CXXFLAGS += -std=c++0x

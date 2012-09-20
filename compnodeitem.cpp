@@ -130,7 +130,7 @@ int CompNodeItem::compute(QList<int> args) const
 {
     const int n = args.size();
     if (!n)
-        return node_compute(m_node, NULL, 0);
+        return compute();
     int x[n];
     for (int i = 0; i < n; ++i)
         x[i] = args.at(i);

@@ -6,16 +6,19 @@
 #include "mainwindow.h"
 #include "compwidget.h"
 #include "compnodeitem.h"
+#include "complibwidget.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       m_toolBar(addToolBar("default")),
-      m_compWidget(new CompWidget)
+      m_compWidget(new CompWidget),
+      m_libWidget(new CompLibWidget)
 {
     QWidget *widget = new QWidget;
     QHBoxLayout *layout = new QHBoxLayout;
     widget->setLayout(layout);
     layout->addWidget(m_compWidget);
+    layout->addWidget(m_libWidget);
 
     setCentralWidget(widget);
 
@@ -38,6 +41,8 @@ MainWindow::MainWindow(QWidget *parent)
     QAction *undoAction = m_toolBar->addAction(tr("Undo"));
     QAction *redoAction = m_toolBar->addAction(tr("Redo"));
     QAction *clearStackAction = m_toolBar->addAction("Clear stack");
+    m_toolBar->addSeparator();
+    QAction *addToLibAction = m_toolBar->addAction(tr("Add to library"));
 
     m_nodeActions.push_back(zeroAction);
     m_nodeActions.push_back(projAction);
@@ -64,6 +69,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(clearStackAction, SIGNAL(triggered()), this, SLOT(clearUndoStack()));
 
     connect(m_compWidget, SIGNAL(selectionChanged(CompNodeItem *)), this, SLOT(updateActions(CompNodeItem *)));
+
+    connect(addToLibAction, SIGNAL(triggered()), this, SLOT(addFuncToLibrary()));
 
     updateActions(0);
 }
@@ -93,6 +100,18 @@ void MainWindow::updateActions(CompNodeItem *selectedItem)
 void MainWindow::clearUndoStack()
 {
     m_compWidget->undoStack()->clear();
+}
+
+void MainWindow::addFuncToLibrary()
+{
+    CompNodeItem *node = m_compWidget->topNode();
+    CompNodeItem *copy = new CompNodeItem(node_clone(node->node()));
+
+    //
+
+    CompLibNode *item1 = new CompLibNode("item x");
+    CompNodeItem *tn = m_compWidget->topNode();
+    tn->insert(tn->childCount(), item1);
 }
 
 void MainWindow::disableAllActions()

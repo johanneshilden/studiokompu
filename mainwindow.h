@@ -5,6 +5,7 @@
 
 class CompNodeItem;
 class CompWidget;
+class CompLibWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -17,12 +18,14 @@ public:
 protected slots:
     void updateActions(CompNodeItem *selectedItem);
     void clearUndoStack();
+    void addFuncToLibrary();
 
 private:
     void disableAllActions();
 
     QToolBar   *const m_toolBar;
     CompWidget *const m_compWidget;
+    CompLibWidget *const m_libWidget;
     QList<QAction *>  m_nodeActions;
     QAction *m_insertLegAction;
     QAction *m_coordinateAction;

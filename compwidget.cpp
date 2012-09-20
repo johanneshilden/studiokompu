@@ -53,40 +53,7 @@ CompWidget::CompWidget(QWidget *parent)
       m_topNode(new CompNodeItem(invalid_node_new())),
       m_valid(false)
 {
-    m_scene->addItem(m_topNode);
-    m_scene->installEventFilter(this);
-
-    QGraphicsView *view = new QGraphicsView;
-    view->setScene(m_scene);
-    view->setRenderHint(QPainter::Antialiasing);
-
-    QVBoxLayout *layout = new QVBoxLayout;
-    setLayout(layout);
-
-    QHBoxLayout *inputLayout = new QHBoxLayout;
-    inputLayout->addWidget(m_input);
-    inputLayout->addWidget(m_computeButton);
-
-    m_logWindow->setFont(QFont("monospace"));
-    m_logWindow->setReadOnly(true);
-    m_logWindow->setMaximumHeight(80);
-    m_logWindow->setStyleSheet("QPlainTextEdit { background: #000; color: #0f0; }");
-
-    layout->addLayout(inputLayout);
-    layout->addWidget(m_logWindow);
-    layout->addWidget(view);
-
-//    QUndoView *uv = new QUndoView(m_undoStack);
-//    uv->setMaximumHeight(80);
-//    layout->addWidget(uv);
-
-    setMinimumSize(300, 300);
-
-    connect(m_computeButton, SIGNAL(clicked()), this, SLOT(compute()));
-    connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(emitSelectionChanged()));
-    connect(this, SIGNAL(validStateChanged(bool)), m_computeButton, SLOT(setEnabled(bool)));
-
-    emit validStateChanged(m_topNode && m_topNode->isValid());
+    initUi();
 }
 
 CompWidget::~CompWidget()
@@ -264,4 +231,44 @@ void CompWidget::replaceSelectedNode(struct node *node)
 
     ReplaceNodeCommand *command = new ReplaceNodeCommand(this, nodeItem, new CompNodeItem(node));
     m_undoStack->push(command);
+}
+
+void CompWidget::initUi()
+{
+    m_scene->addItem(m_topNode);
+    m_scene->installEventFilter(this);
+
+    QGraphicsView *view = new QGraphicsView;
+    view->setScene(m_scene);
+    view->setRenderHint(QPainter::Antialiasing);
+
+    QVBoxLayout *layout = new QVBoxLayout;
+    setLayout(layout);
+
+    QHBoxLayout *inputLayout = new QHBoxLayout;
+    inputLayout->addWidget(m_input);
+    inputLayout->addWidget(m_computeButton);
+
+    m_logWindow->setFont(QFont("monospace"));
+    m_logWindow->setReadOnly(true);
+    m_logWindow->setMaximumHeight(80);
+    m_logWindow->setStyleSheet("QPlainTextEdit { background: #000; color: #0f0; }");
+
+    layout->addLayout(inputLayout);
+    layout->addWidget(m_logWindow);
+    layout->addWidget(view);
+
+    /*
+    QUndoView *uv = new QUndoView(m_undoStack);
+    uv->setMaximumHeight(80);
+    layout->addWidget(uv);
+    */
+
+    setMinimumSize(300, 300);
+
+    connect(m_computeButton, SIGNAL(clicked()), this, SLOT(compute()));
+    connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(emitSelectionChanged()));
+    connect(this, SIGNAL(validStateChanged(bool)), m_computeButton, SLOT(setEnabled(bool)));
+
+    emit validStateChanged(m_topNode && m_topNode->isValid());
 }

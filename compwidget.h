@@ -35,6 +35,7 @@ public:
 
     inline QUndoStack *undoStack() const { return m_undoStack; }
     inline void setTopNode(CompNodeItem *node) { m_topNode = node; validate(); }
+    inline CompNodeItem *topNode() const { return m_topNode; }
     void validate();
 
 protected:
@@ -62,6 +63,7 @@ protected slots:
 
 private:
     void replaceSelectedNode(struct node *node);
+    void initUi();
 
     CompGraphicsScene *const m_scene;
     QPushButton       *const m_computeButton;
