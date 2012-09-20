@@ -2,6 +2,7 @@
 #include <QToolBar>
 #include <QAction>
 #include <QUndoStack>
+#include <QHBoxLayout>
 #include "mainwindow.h"
 #include "compwidget.h"
 #include "compnodeitem.h"
@@ -11,9 +12,12 @@ MainWindow::MainWindow(QWidget *parent)
       m_toolBar(addToolBar("default")),
       m_compWidget(new CompWidget)
 {
-    setCentralWidget(m_compWidget);
+    QWidget *widget = new QWidget;
+    QHBoxLayout *layout = new QHBoxLayout;
+    widget->setLayout(layout);
+    layout->addWidget(m_compWidget);
 
-    //
+    setCentralWidget(widget);
 
     m_toolBar->setContextMenuPolicy(Qt::CustomContextMenu);
     m_toolBar->setMovable(false);

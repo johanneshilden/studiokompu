@@ -42,7 +42,6 @@ CompNodeItem::CompNodeItem(struct node *node, QGraphicsItem *parent)
     case CompositionNode:
     {
         struct node_composition *comp = (struct node_composition *) node->data;
-
         m_childNodes.push_back(new CompNodeItem(comp->f, this));
 
         struct node **g = comp->g;
@@ -57,7 +56,6 @@ CompNodeItem::CompNodeItem(struct node *node, QGraphicsItem *parent)
     case RecursionNode:
     {
         struct node_recursion *rec = (struct node_recursion *) node->data;
-
         m_childNodes.push_back(new CompNodeItem(rec->f, this));
         m_childNodes.push_back(new CompNodeItem(rec->g, this));
 
@@ -67,7 +65,6 @@ CompNodeItem::CompNodeItem(struct node *node, QGraphicsItem *parent)
     case SearchNode:
     {
         struct node_search *search = (struct node_search *) node->data;
-
         m_childNodes.push_back(new CompNodeItem(search->p, this));
 
         buildSearchNodeLeg();
@@ -132,6 +129,8 @@ int CompNodeItem::compute() const
 int CompNodeItem::compute(QList<int> args) const
 {
     const int n = args.size();
+    if (!n)
+        return node_compute(m_node, NULL, 0);
     int x[n];
     for (int i = 0; i < n; ++i)
         x[i] = args.at(i);

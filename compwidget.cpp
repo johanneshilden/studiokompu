@@ -76,7 +76,9 @@ CompWidget::CompWidget(QWidget *parent)
     layout->addWidget(m_logWindow);
     layout->addWidget(view);
 
-    layout->addWidget(new QUndoView(m_undoStack));
+//    QUndoView *uv = new QUndoView(m_undoStack);
+//    uv->setMaximumHeight(80);
+//    layout->addWidget(uv);
 
     setMinimumSize(300, 300);
 
