@@ -54,6 +54,7 @@ CompWidget::CompWidget(QWidget *parent)
       m_valid(false)
 {
     initUi();
+    setAcceptDrops(true);
 }
 
 CompWidget::~CompWidget()
@@ -75,7 +76,9 @@ void CompWidget::replaceSelectedNode(struct node *node)
         return;
     }
 
-    ReplaceNodeCommand *command = new ReplaceNodeCommand(this, nodeItem, new CompNodeItem(node));
+    ReplaceNodeCommand *command = new ReplaceNodeCommand(this,
+                                                         nodeItem,
+                                                         new CompNodeItem(node));
     m_undoStack->push(command);
 }
 
@@ -146,6 +149,16 @@ bool CompWidget::eventFilter(QObject *object, QEvent *event)
         }
     }
     return QWidget::eventFilter(object, event);
+}
+
+void CompWidget::dragEnterEvent(QDragEnterEvent *event)
+{
+    QWidget::dragEnterEvent(event);
+}
+
+void CompWidget::dragMoveEvent(QDragMoveEvent *event)
+{
+    QWidget::dragMoveEvent(event);
 }
 
 void CompWidget::insertZeroNode()

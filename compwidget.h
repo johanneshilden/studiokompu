@@ -34,7 +34,6 @@ public:
     ~CompWidget();
 
     inline QUndoStack *undoStack() const { return m_undoStack; }
-//    inline const CompGraphicsScene *scene() const { return m_scene; }
     inline void setTopNode(CompNodeItem *node) { m_topNode = node; validate(); }
     inline CompNodeItem *topNode() const { return m_topNode; }
     void validate();
@@ -44,6 +43,8 @@ public:
 
 protected:
     bool eventFilter(QObject *object, QEvent *event);
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dragMoveEvent(QDragMoveEvent *event);
 
 signals:
     void selectionChanged(CompNodeItem *);

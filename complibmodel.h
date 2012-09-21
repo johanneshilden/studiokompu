@@ -2,6 +2,7 @@
 #define COMPLIBMODEL_H
 
 #include <QAbstractItemModel>
+#include <QStringList>
 
 class CompNodeItem;
 
@@ -20,8 +21,6 @@ public:
     inline CompLibNode *child(int row) const { return m_children.value(row); }
     inline int childCount() const { return m_children.count(); }
 
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
-
     inline CompLibNode *parent() const { return m_parent; }
 
     int row() const;
@@ -32,7 +31,7 @@ private:
     QString m_title;
     QString m_serial;
     QList<CompLibNode *> m_children;
-    CompLibNode  *m_parent;
+    CompLibNode *m_parent;
 };
 
 
@@ -62,6 +61,16 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
+    QVariant headerData(int, Qt::Orientation orientation, int role) const;
+    Qt::ItemFlags flags(const QModelIndex &index) const;
+
+    bool dropMimeData(const QMimeData *data, Qt::DropAction dropAction, int, int, const QModelIndex &parent);
+    QMimeData *mimeData(const QModelIndexList &indexes) const;
+
+    Qt::DropActions supportedDropActions() const { return Qt::CopyAction | Qt::MoveAction; }
+
+    QStringList mimeTypes() const { QStringList types; types << "text/plain"; return types; }
+
     inline CompLibNode *node(const QModelIndex &index) const
     {
         if (index.isValid())
@@ -69,6 +78,9 @@ public:
         else
             return m_rootNode;
     }
+
+signals:
+    void dataDropped(QString);
 
 private:
     CompLibNode *const m_rootNode;

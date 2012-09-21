@@ -1,10 +1,10 @@
+#include <QMimeData>
 #include <QDebug>
 #include "complibmodel.h"
 #include "compnodeitem.h"
 
 CompLibNode::CompLibNode()
     : m_parent(0)
-//      m_nodeItem(nodeItem)
 {
 //    qDebug() << ">>>>>>>> ++ CompLibNode";
 }
@@ -13,7 +13,6 @@ CompLibNode::~CompLibNode()
 {
     while (!m_children.isEmpty())
         delete m_children.takeLast();
-//    delete m_nodeItem;
 
 //    qDebug() << ">>>>>>>> -- CompLibNode";
 }
@@ -50,6 +49,8 @@ CompLibModel::CompLibModel(QObject *parent)
     : QAbstractItemModel(parent),
       m_rootNode(new CompLibNode)
 {
+    setData(QModelIndex(), QVariant(tr("Function library")));
+
     //
 
 //    insertRow(0, QModelIndex());
@@ -159,7 +160,6 @@ bool CompLibModel::setData(const QModelIndex &index, const QVariant &value, int 
     switch (role)
     {
     case Qt::EditRole:
-//        m_undoStack->push(new LRenameCommand(this, item, value.toString()));
         item->setTitle(value.toString());
         emit dataChanged(index, index);
         return true;
@@ -190,4 +190,41 @@ QVariant CompLibModel::data(const QModelIndex &index, int role) const
         break;
     }  // end switch
     return QVariant();
+}
+
+QVariant CompLibModel::headerData(int, Qt::Orientation orientation, int role) const
+{
+    if (orientation == Qt::Horizontal && role == Qt::DisplayRole)
+        return m_rootNode->title();
+    return QVariant();
+}
+
+Qt::ItemFlags CompLibModel::flags(const QModelIndex &index) const
+{
+    if (hasChildren(index)) {
+        return Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    } else {
+        return Qt::ItemIsDragEnabled | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+    }
+}
+
+bool CompLibModel::dropMimeData(const QMimeData *data, Qt::DropAction dropAction, int, int, const QModelIndex &parent)
+{
+    if (dropAction == Qt::IgnoreAction)
+        return true;
+    emit dataDropped(data->text());
+    return true;
+}
+
+QMimeData *CompLibModel::mimeData(const QModelIndexList &indexes) const
+{
+    if (indexes.count() <= 0)
+        return 0;
+    QStringList types = mimeTypes();
+    if (types.isEmpty())
+        return 0;
+
+    QMimeData *data = new QMimeData;
+    data->setText("asdfasdf");
+    return data;
 }

@@ -30,6 +30,9 @@ public:
     explicit CompLibWidget(QUndoStack *undoStack, QWidget *parent = 0);
     void insertNodeItem(CompNodeItem *item);
 
+protected slots:
+    void insertDroppedData(QString data);
+
 private:
     CompLibModel *const m_model;
     QUndoStack   *const m_undoStack;
