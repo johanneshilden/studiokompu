@@ -7,12 +7,14 @@
 #include "compwidget.h"
 #include "compnodeitem.h"
 #include "complibwidget.h"
+#include "complibmodel.h"
+#include "lib/comp_serialize.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent),
       m_toolBar(addToolBar("default")),
       m_compWidget(new CompWidget),
-      m_libWidget(new CompLibWidget)
+      m_libWidget(new CompLibWidget(m_compWidget->undoStack()))
 {
     QWidget *widget = new QWidget;
     QHBoxLayout *layout = new QHBoxLayout;
@@ -42,7 +44,8 @@ MainWindow::MainWindow(QWidget *parent)
     QAction *redoAction = m_toolBar->addAction(tr("Redo"));
     QAction *clearStackAction = m_toolBar->addAction("Clear stack");
     m_toolBar->addSeparator();
-    QAction *addToLibAction = m_toolBar->addAction(tr("Add to library"));
+    QAction *addToLibAction = m_toolBar->addAction("-->");
+    QAction *takeFromLibAct = m_toolBar->addAction("<--");
 
     m_nodeActions.push_back(zeroAction);
     m_nodeActions.push_back(projAction);
@@ -71,6 +74,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_compWidget, SIGNAL(selectionChanged(CompNodeItem *)), this, SLOT(updateActions(CompNodeItem *)));
 
     connect(addToLibAction, SIGNAL(triggered()), this, SLOT(addFuncToLibrary()));
+    connect(takeFromLibAct, SIGNAL(triggered()), this, SLOT(insertFuncFromLib()));
 
     updateActions(0);
 }
@@ -104,20 +108,32 @@ void MainWindow::clearUndoStack()
 
 void MainWindow::addFuncToLibrary()
 {
-    CompNodeItem *node = m_compWidget->topNode();
-    CompNodeItem *copy = new CompNodeItem(node_clone(node->node()));
+    CompNodeItem *nodeItem = m_compWidget->selectedNodeItem();
+    if (!nodeItem)
+        return;
+    m_libWidget->insertNodeItem(nodeItem);
+}
 
-    //
-
-    CompLibNode *item1 = new CompLibNode("item x");
-    CompNodeItem *tn = m_compWidget->topNode();
-    tn->insert(tn->childCount(), item1);
+void MainWindow::insertFuncFromLib()
+{
+    QModelIndex index = m_libWidget->currentIndex();
+    if (!index.isValid())
+        return;
+    QVariant data = m_libWidget->model()->data(index, CompLibModel::NodeDataRole);
+    QByteArray ba = data.toString().toAscii();
+    const char *str = ba.data();
+    struct buf *buf = buf_new(1024);
+    buf_append_chars(buf, str);
+    m_compWidget->replaceSelectedNode(node_unserialize(buf));
+    buf_destroy(buf);
 }
 
 void MainWindow::disableAllActions()
 {
     QList<QAction *> actions = m_toolBar->actions();
-    QList<QAction *>::const_iterator i;
-    for (i = actions.constBegin(); i != actions.constEnd() - 3; ++i)
+    QList<QAction *>::const_iterator i = actions.constBegin();
+    while (i != actions.constEnd() - 6) {
         (*i)->setEnabled(false);
+        ++i;
+    }
 }

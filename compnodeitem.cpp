@@ -107,7 +107,6 @@ bool CompNodeItem::isValid() const
         return true;
     case CompositionNode:
     case RecursionNode:
-    case SearchNode:
     {
         QList<CompNodeItem *>::const_iterator i;
         for (i = m_childNodes.constBegin(); i != m_childNodes.constEnd(); ++i)
@@ -115,6 +114,9 @@ bool CompNodeItem::isValid() const
                 return false;
         return true;
     }
+    case SearchNode:
+        return !m_childNodes.isEmpty() &&
+                m_childNodes.first()->isValid();
     case InvalidNode:
     default:
         return false;
@@ -249,3 +251,4 @@ void CompNodeItem::buildSearchNodeLeg()
 
     new QGraphicsLineItem(0, 25, 0, p->y() - 25 * NodeScaleFactor, this);
 }
+

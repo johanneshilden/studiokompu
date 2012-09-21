@@ -3,27 +3,36 @@
 
 #include <QAbstractItemModel>
 
+class CompNodeItem;
+
 class CompLibNode
 {
 public:
-    CompLibNode(QString title);
+    CompLibNode();
     ~CompLibNode();
 
     inline void setTitle(QString title) { m_title = title; }
     inline QString title() const { return m_title; }
 
+    inline void setSerialData(QString data) { m_serial = data; }
+    inline QString serialData() const { return m_serial; }
+
     inline CompLibNode *child(int row) const { return m_children.value(row); }
     inline int childCount() const { return m_children.count(); }
+
+    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
     inline CompLibNode *parent() const { return m_parent; }
 
     int row() const;
     void insert(int position, CompLibNode *item);
+    CompLibNode *takeAt(int position);
 
 private:
     QString m_title;
+    QString m_serial;
     QList<CompLibNode *> m_children;
-    CompLibNode *m_parent;
+    CompLibNode  *m_parent;
 };
 
 
@@ -32,6 +41,10 @@ class CompLibModel : public QAbstractItemModel
     Q_OBJECT
 
 public:
+    enum Roles {
+        NodeDataRole   = Qt::UserRole + 1
+    };
+
     explicit CompLibModel(QObject *parent = 0);
     ~CompLibModel();
 
@@ -41,6 +54,12 @@ public:
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
 
+    bool hasChildren(const QModelIndex &parent) const;
+
+    bool insertRow(int row, const QModelIndex &parent);
+    bool removeRow(int row, const QModelIndex &parent = QModelIndex());
+
+    bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole);
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const;
 
     inline CompLibNode *node(const QModelIndex &index) const

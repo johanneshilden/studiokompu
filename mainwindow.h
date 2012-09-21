@@ -19,6 +19,7 @@ protected slots:
     void updateActions(CompNodeItem *selectedItem);
     void clearUndoStack();
     void addFuncToLibrary();
+    void insertFuncFromLib();
 
 private:
     void disableAllActions();

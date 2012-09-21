@@ -67,6 +67,23 @@ void CompWidget::validate()
         emit validStateChanged(m_valid = v);
 }
 
+void CompWidget::replaceSelectedNode(struct node *node)
+{
+    CompNodeItem *nodeItem = m_scene->selectedNodeItem();
+    if (!nodeItem) {
+        node_destroy(node);
+        return;
+    }
+
+    ReplaceNodeCommand *command = new ReplaceNodeCommand(this, nodeItem, new CompNodeItem(node));
+    m_undoStack->push(command);
+}
+
+CompNodeItem *CompWidget::selectedNodeItem() const
+{
+    return m_scene->selectedNodeItem();
+}
+
 bool CompWidget::eventFilter(QObject *object, QEvent *event)
 {
     if (QEvent::KeyPress == event->type()) {
@@ -221,18 +238,6 @@ void CompWidget::emitSelectionChanged()
     emit selectionChanged(m_scene->selectedNodeItem());
 }
 
-void CompWidget::replaceSelectedNode(struct node *node)
-{
-    CompNodeItem *nodeItem = m_scene->selectedNodeItem();
-    if (!nodeItem) {
-        node_destroy(node);
-        return;
-    }
-
-    ReplaceNodeCommand *command = new ReplaceNodeCommand(this, nodeItem, new CompNodeItem(node));
-    m_undoStack->push(command);
-}
-
 void CompWidget::initUi()
 {
     m_scene->addItem(m_topNode);
@@ -259,10 +264,10 @@ void CompWidget::initUi()
     layout->addWidget(view);
 
     /*
+    */
     QUndoView *uv = new QUndoView(m_undoStack);
     uv->setMaximumHeight(80);
     layout->addWidget(uv);
-    */
 
     setMinimumSize(300, 300);
 

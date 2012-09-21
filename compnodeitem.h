@@ -64,4 +64,6 @@ private:
     QList<CompNodeItem *> m_childNodes;
 };
 
+Q_DECLARE_METATYPE(CompNodeItem *)
+
 #endif // COMPNODEITEM_H

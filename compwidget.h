@@ -34,9 +34,13 @@ public:
     ~CompWidget();
 
     inline QUndoStack *undoStack() const { return m_undoStack; }
+//    inline const CompGraphicsScene *scene() const { return m_scene; }
     inline void setTopNode(CompNodeItem *node) { m_topNode = node; validate(); }
     inline CompNodeItem *topNode() const { return m_topNode; }
     void validate();
+
+    void replaceSelectedNode(struct node *node);
+    CompNodeItem *selectedNodeItem() const;
 
 protected:
     bool eventFilter(QObject *object, QEvent *event);
@@ -62,7 +66,6 @@ protected slots:
     void emitSelectionChanged();
 
 private:
-    void replaceSelectedNode(struct node *node);
     void initUi();
 
     CompGraphicsScene *const m_scene;
