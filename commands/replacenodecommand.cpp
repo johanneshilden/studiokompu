@@ -80,7 +80,7 @@ CompNodeItem *ReplaceNodeCommand::switchNodes(CompNodeItem *old, CompNodeItem *n
     foreach (QGraphicsItem *item, scene->selectedItems())
         item->setSelected(false);
     neue->setSelected(true);
-    scene->update();
     m_widget->validate();
+    scene->update();
     return old;
 }

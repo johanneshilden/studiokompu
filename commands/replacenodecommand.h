@@ -18,9 +18,9 @@ public:
 private:
     CompNodeItem *switchNodes(CompNodeItem *old, CompNodeItem *neue);
 
-    CompWidget *const m_widget;
-    CompNodeItem *m_old;
-    CompNodeItem *m_new;
+    CompWidget   *const m_widget;
+    CompNodeItem *const m_old;
+    CompNodeItem *const m_new;
     CompNodeItem *m_item;
 };
 

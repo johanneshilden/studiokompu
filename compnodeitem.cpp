@@ -51,8 +51,7 @@ CompNodeItem::CompNodeItem(struct node *node, QGraphicsItem *parent)
             m_childNodes.push_back(new CompNodeItem(*g, this));
             ++g;
         }
-
-        buildCompositionNodeLegs();
+        buildCompositionNodes();
         break;
     }
     case RecursionNode:
@@ -60,16 +59,14 @@ CompNodeItem::CompNodeItem(struct node *node, QGraphicsItem *parent)
         struct node_recursion *rec = (struct node_recursion *) node->data;
         m_childNodes.push_back(new CompNodeItem(rec->f, this));
         m_childNodes.push_back(new CompNodeItem(rec->g, this));
-
-        buildRecursionNodeLegs();
+        buildRecursionNodes();
         break;
     }
     case SearchNode:
     {
         struct node_search *search = (struct node_search *) node->data;
         m_childNodes.push_back(new CompNodeItem(search->p, this));
-
-        buildSearchNodeLeg();
+        buildSearchNode();
         break;
     }
     case ZeroNode:
@@ -110,8 +107,8 @@ bool CompNodeItem::isValid() const
     case CompositionNode:
     case RecursionNode:
     {
-        QList<CompNodeItem *>::const_iterator i;
-        for (i = m_childNodes.constBegin(); i != m_childNodes.constEnd(); ++i)
+        QList<CompNodeItem *>::const_iterator i = m_childNodes.constBegin();
+        for (; i != m_childNodes.constEnd(); ++i)
             if (!(*i)->isValid())
                 return false;
         return true;
@@ -143,57 +140,78 @@ int CompNodeItem::compute(QList<int> args) const
 
 QRectF CompNodeItem::boundingRect() const
 {
-    return QRectF(-25, -25, 50, 50);
+    const qreal x = NodeScaleFactor * 25;
+    return QRectF(-65 - x, -25, 130 + 2 * x, 85 + x);
 }
 
 void CompNodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
-    const bool isDropItem = m_scene->dropItem() == this;
-
     QPen pen;
-    if (isSelected() && !isDropItem)
-        pen.setColor(Qt::cyan);
-    else if (isDropItem)
+    if (m_scene->dropItem() == this) {
         pen.setColor(Qt::red);
+    } else {
+        if (isSelected()) {
+            pen.setColor(Qt::cyan);
+        } else {
+            QGraphicsItem *item = parentItem();
+            while (item) {
+                if (item->isSelected()) {
+                    pen.setColor(Qt::green);
+                    break;
+                }
+                item = item->parentItem();
+            }
+        }
+    }
+    QRectF box(-25, -25, 50, 50);
 
     painter->setPen(pen);
-
     switch (nodeType())
     {
     case ZeroNode:
-        painter->drawRect(boundingRect());
+        painter->drawRect(box);
         painter->drawText(0, 0, "Z");
         break;
     case ProjectionNode:
     {
-        painter->drawRect(boundingRect());
+        painter->drawRect(box);
         struct node_projection *proj = (struct node_projection *) node()->data;
         painter->drawText(0, 0, QString("P:%1").arg(proj->place + 1));
         break;
     }
     case SuccessorNode:
-        painter->drawRect(boundingRect());
+        painter->drawRect(box);
         painter->drawText(0, 0, "+");
         break;
     case CompositionNode:
-        painter->drawRect(boundingRect());
+        painter->drawRect(box);
         painter->drawText(0, 0, "C");
+        paintLegs(painter);
         break;
     case RecursionNode:
-        painter->drawRect(boundingRect());
+        painter->drawRect(box);
         painter->drawText(0, 0, "R");
+        paintLegs(painter);
         break;
     case SearchNode:
-        painter->drawRect(boundingRect());
+        painter->drawRect(box);
         painter->drawText(0, 0, "S");
+        paintLegs(painter);
         break;
     case InvalidNode:
     default:
         pen.setStyle(Qt::DashLine);
         painter->setPen(pen);
-        painter->drawRect(boundingRect());
+        painter->drawRect(box);
         break;
     } // end switch
+
+    /*
+    pen.setColor(QColor(Qt::gray).lighter(145));
+    pen.setStyle(Qt::SolidLine);
+    painter->setPen(pen);
+    painter->drawRect(boundingRect());
+    */
 }
 
 int CompNodeItem::type() const
@@ -208,13 +226,16 @@ CompNodeItem::NodeType CompNodeItem::nodeType() const
 
 QVariant CompNodeItem::itemChange(GraphicsItemChange change, const QVariant &value)
 {
-    if (QGraphicsItem::ItemSceneChange == change)
+    if (QGraphicsItem::ItemSceneChange == change) {
         if (value.canConvert<QGraphicsScene *>())
             m_scene = static_cast<CompGraphicsScene *>(value.value<QGraphicsScene *>());
+    } else if (QGraphicsItem::ItemSelectedChange == change) {
+        updateCascading();
+    }
     return QGraphicsItem::itemChange(change, value);
 }
 
-void CompNodeItem::buildCompositionNodeLegs()
+void CompNodeItem::buildCompositionNodes()
 {
     assert(m_childNodes.size() > 1);
 
@@ -223,22 +244,20 @@ void CompNodeItem::buildCompositionNodeLegs()
     CompNodeItem *f = m_childNodes.first();
     f->setPos(-65, 95);
     f->setScale(sf);
-    new QGraphicsLineItem(0, 25, f->x(), f->y() - 25 * sf, this);
 
     qreal d = (qreal) 130/(m_childNodes.count() - 1);
     qreal x = -65 + d;
 
-    QList<CompNodeItem *>::const_iterator i;
-    for (i = m_childNodes.constBegin() + 1; i != m_childNodes.constEnd(); ++i) {
+    QList<CompNodeItem *>::const_iterator i = m_childNodes.constBegin() + 1;
+    for (; i != m_childNodes.constEnd(); ++i) {
         CompNodeItem *n = *i;
         n->setPos(x, 95);
         n->setScale(sf);
-        new QGraphicsLineItem(0, 25, n->x(), n->y() - 25 * sf, this);
         x += d;
     }
 }
 
-void CompNodeItem::buildRecursionNodeLegs()
+void CompNodeItem::buildRecursionNodes()
 {
     assert(m_childNodes.size() == 2);
 
@@ -249,12 +268,9 @@ void CompNodeItem::buildRecursionNodeLegs()
     g->setPos(65, 95);
     f->setScale(CompNodeItem::NodeScaleFactor);
     g->setScale(CompNodeItem::NodeScaleFactor);
-
-    new QGraphicsLineItem(0, 25, f->x(), f->y() - 25 * NodeScaleFactor, this);
-    new QGraphicsLineItem(0, 25, g->x(), g->y() - 25 * NodeScaleFactor, this);
 }
 
-void CompNodeItem::buildSearchNodeLeg()
+void CompNodeItem::buildSearchNode()
 {
     assert(m_childNodes.size() == 1);
 
@@ -262,7 +278,31 @@ void CompNodeItem::buildSearchNodeLeg()
 
     p->setPos(0, 95);
     p->setScale(CompNodeItem::NodeScaleFactor);
-
-    new QGraphicsLineItem(0, 25, 0, p->y() - 25 * NodeScaleFactor, this);
 }
 
+void CompNodeItem::updateCascading()
+{
+    update();
+    QList<CompNodeItem *>::const_iterator i = m_childNodes.constBegin();
+    for (; i != m_childNodes.constEnd(); ++i)
+        (*i)->updateCascading();
+}
+
+void CompNodeItem::paintLegs(QPainter *painter) const
+{
+    QList<CompNodeItem *>::const_iterator i = m_childNodes.constBegin();
+    qreal sf = NodeScaleFactor;
+
+    if (CompositionNode == nodeType())
+        sf = NodeScaleFactor * (qreal) 4/(m_childNodes.count() + 2);
+
+    for (; i != m_childNodes.constEnd(); ++i) {
+        CompNodeItem *leg = *i;
+        if (isSelected()) {
+            QPen pen = painter->pen();
+            pen.setColor(Qt::green);
+            painter->setPen(pen);
+        }
+        painter->drawLine(0, 25, leg->x(), leg->y() - 25 * sf);
+    }
+}

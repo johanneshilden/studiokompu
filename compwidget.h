@@ -5,9 +5,6 @@
 #include <QDialog>
 #include <QGraphicsView>
 
-#include <QDebug>
-#include <QDragEnterEvent>
-
 class QSpinBox;
 
 class CompProjectionDialog : public QDialog
@@ -21,6 +18,8 @@ public:
 private:
     QSpinBox *const m_sb;
 };
+
+class CompNodeItem;
 
 class CompGraphicsView : public QGraphicsView
 {
@@ -42,6 +41,7 @@ signals:
 
 private:
     QPoint m_dragStartPosition;
+    CompNodeItem *m_dragItem;
 };
 
 class QPushButton;
@@ -50,7 +50,6 @@ class QPlainTextEdit;
 class QGraphicsView;
 class QUndoStack;
 class CompGraphicsScene;
-class CompNodeItem;
 
 class CompWidget : public QWidget
 {
@@ -85,7 +84,7 @@ protected slots:
     void insertProjectionNode();
     void insertSearchNode();
     void insertNodeLeg();
-    void dumpNode();
+//    void dumpNode();
 
     void compute();
     void showProjectionDialog();

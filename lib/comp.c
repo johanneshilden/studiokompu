@@ -43,6 +43,107 @@
  *  \brief Search operator node.
  */
 
+static int
+compute(const struct node *n, int *x, size_t args, int rec)
+{
+    union node_d_ptr d_ptr;
+    struct node **curr;
+    int i, j, lim;
+
+//    assert(-1 != *x);
+    if (-1 == *x)
+        return -1;
+
+    printf("rec = %i\n", rec);
+    if (rec > 1000) {
+        exit(0);
+    }
+
+    switch (n->type)
+    {
+    case NODE_ZERO:
+        printf(":: node_zero\n");
+        fflush(stdout);
+
+        return 0;
+    case NODE_INVALID:
+        printf(":: node_invalid\n");
+        fflush(stdout);
+
+        return 0;
+    case NODE_PROJECTION:
+        printf(":: node_projection\n");
+        fflush(stdout);
+        d_ptr.proj = (struct node_projection *) n->data;
+//        assert(d_ptr.proj->place < (int) args);
+//        return x[d_ptr.proj->place];
+
+        j = d_ptr.proj->place;
+
+        return j < (int) args ? x[j] : -1;
+
+    case NODE_SUCCESSOR:
+        printf(":: node_successor\n");
+        fflush(stdout);
+        return (*x) + 1;
+    case NODE_COMPOSITION:
+    {
+        printf(":: node_composition\n");
+        fflush(stdout);
+
+        d_ptr.comp = (struct node_composition *) n->data;
+        curr = d_ptr.comp->g;
+        int y[d_ptr.comp->places];
+        j = 0;
+        while (j < d_ptr.comp->places) {
+            i = compute(*curr, x, args, rec);
+            if (-1 == i)
+                return -1;
+            y[j++] = i;
+            ++curr;
+        }
+        return compute(d_ptr.comp->f, y, j, rec);
+    }
+    case NODE_RECURSION:
+        printf(":: node_recursion\n");
+        fflush(stdout);
+
+        d_ptr.rec = (struct node_recursion *) n->data;
+        if (0 == x[args - 1]) {
+            return compute(d_ptr.rec->f, x, args - 1, rec);
+        } else {
+            int nx[args + 1];
+            --x[args - 1];
+            nx[0] = node_compute(n, x, args);
+            memcpy(&nx[1], x, args * sizeof(int));
+            ++x[args - 1];
+
+            //
+
+            return compute(d_ptr.rec->g, nx, args + 1, rec + 1);
+        }
+    case NODE_SEARCH:
+        printf(":: node_search\n");
+        fflush(stdout);
+
+        d_ptr.search = (struct node_search *) n->data;
+
+        lim = x[args - 1];
+        for (i = 0; i < lim; ++i) {
+            x[args - 1] = i;
+            if (1 == compute(d_ptr.search->p, x, args, rec))
+                return i;
+        }
+        return lim;
+    } /* end switch */
+
+    /*
+     * We should never reach here!
+     */
+    assert(0);
+    return -1;
+}
+
 /*!
  *  Creates a new projection function node.
  */
@@ -290,61 +391,7 @@ node_array_new(size_t e)
 int
 node_compute(const struct node *n, int *x, size_t args)
 {
-    union node_d_ptr d_ptr;
-    struct node **curr;
-    int i, j, lim;
-
-    switch (n->type)
-    {
-    case NODE_ZERO:
-    case NODE_INVALID:
-        return 0;
-    case NODE_PROJECTION:
-        d_ptr.proj = (struct node_projection *) n->data;
-        return x[d_ptr.proj->place];
-    case NODE_SUCCESSOR:
-        return (*x) + 1;
-    case NODE_COMPOSITION:
-    {
-        d_ptr.comp = (struct node_composition *) n->data;
-        curr = d_ptr.comp->g;
-        int y[d_ptr.comp->places];
-        j = 0;
-        while (j < d_ptr.comp->places) {
-            y[j++] = node_compute(*curr, x, args);
-            ++curr;
-        }
-        return node_compute(d_ptr.comp->f, y, j);
-    }
-    case NODE_RECURSION:
-        d_ptr.rec = (struct node_recursion *) n->data;
-        if (0 == x[args - 1]) {
-            return node_compute(d_ptr.rec->f, x, args - 1);
-        } else {
-            int nx[args + 1];
-            --x[args - 1];
-            nx[0] = node_compute(n, x, args);
-            memcpy(&nx[1], x, args * sizeof(int));
-            ++x[args - 1];
-            return node_compute(d_ptr.rec->g, nx, args + 1);
-        }
-    case NODE_SEARCH:
-        d_ptr.search = (struct node_search *) n->data;
-
-        lim = x[args - 1];
-        for (i = 0; i < lim; ++i) {
-            x[args - 1] = i;
-            if (1 == node_compute(d_ptr.search->p, x, args))
-                return i;
-        }
-        return lim;
-    } /* end switch */
-
-    /*
-     * We should never reach here!
-     */
-    assert(0);
-    return -1;
+    return compute(n, x, args, 0);
 }
 
 void node_dump(struct node *n)

@@ -18,11 +18,11 @@ public:
 private:
     void rebuild();
 
-    CompWidget *const m_widget;
-    CompNodeItem *m_item;
-    CompNodeItem *m_parent;
+    CompWidget   *const m_widget;
+    CompNodeItem *const m_item;
+    CompNodeItem *const m_parent;
     CompNodeItem *m_tmp;
-    struct node_composition *m_comp;
+    struct node_composition *const m_comp;
     int m_pos;
 };
 

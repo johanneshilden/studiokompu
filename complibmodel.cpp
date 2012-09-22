@@ -6,15 +6,12 @@
 CompLibNode::CompLibNode()
     : m_parent(0)
 {
-//    qDebug() << ">>>>>>>> ++ CompLibNode";
 }
 
 CompLibNode::~CompLibNode()
 {
     while (!m_children.isEmpty())
         delete m_children.takeLast();
-
-//    qDebug() << ">>>>>>>> -- CompLibNode";
 }
 
 int CompLibNode::row() const
@@ -189,7 +186,7 @@ Qt::ItemFlags CompLibModel::flags(const QModelIndex &index) const
     }
 }
 
-bool CompLibModel::dropMimeData(const QMimeData *data, Qt::DropAction dropAction, int, int, const QModelIndex &parent)
+bool CompLibModel::dropMimeData(const QMimeData *data, Qt::DropAction dropAction, int, int, const QModelIndex&)
 {
     if (dropAction == Qt::IgnoreAction)
         return true;
@@ -206,19 +203,8 @@ QMimeData *CompLibModel::mimeData(const QModelIndexList &indexes) const
         return 0;
 
     QMimeData *data = new QMimeData;
-    /*
-    QString str;
-
-    foreach (QModelIndex index, indexes)  {
-        if (!str.isEmpty())
-            str.append(QChar::LineSeparator);
-        str.append(this->data(index, CompLibModel::NodeDataRole).toString());
-    }
-    data->setText(str);
-    */
 
     data->setText(this->data(indexes.first(),
                              CompLibModel::NodeDataRole).toString());
-
     return data;
 }

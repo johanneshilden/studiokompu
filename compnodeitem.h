@@ -7,14 +7,7 @@
 #include <tr1/memory>
 #include <tr1/shared_ptr.h>
 
-using namespace std;
-
 void node_destroy_no_cascade(struct node *n);
-
-//struct free_delete
-//{
-//    void operator ()(struct node *node) { node_destroy_no_cascade(node); }
-//};
 
 class CompGraphicsScene;
 
@@ -61,9 +54,12 @@ private:
     friend class ReplaceNodeCommand;
     friend class InsertNodeCommand;
 
-    void buildCompositionNodeLegs();
-    void buildRecursionNodeLegs();
-    void buildSearchNodeLeg();
+    void buildCompositionNodes();
+    void buildRecursionNodes();
+    void buildSearchNode();
+
+    void updateCascading();
+    void paintLegs(QPainter *painter) const;
 
     struct node *m_node;
     CompGraphicsScene *m_scene;

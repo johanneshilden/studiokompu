@@ -30,7 +30,6 @@ private:
     QList<QAction *>  m_nodeActions;
     QAction *m_insertLegAction;
     QAction *m_coordinateAction;
-    QAction *m_debugDumpAction;
 };
 
 #endif // MAINWINDOW_H

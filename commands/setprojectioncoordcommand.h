@@ -15,8 +15,8 @@ public:
     void redo();
 
 private:
-    CompNodeItem *const m_item;
-    struct node_projection *m_proj;
+    CompNodeItem           *const m_item;
+    struct node_projection *const m_proj;
     int m_place;
     int m_old;
 };

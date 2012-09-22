@@ -72,18 +72,7 @@ void InsertNodeCommand::redo()
 
 void InsertNodeCommand::rebuild()
 {
-    QList<QGraphicsItem *> items = m_parent->childItems();
-    QList<QGraphicsItem *>::const_iterator k;
-    for (k = items.constBegin(); k != items.constEnd(); ++k) {
-        QGraphicsItem *it = *k;
-
-        if (!qgraphicsitem_cast<CompNodeItem *>(it)) {
-            // Item is not a CompNodeItem
-            it->scene()->removeItem(it);
-            delete it;
-        }
-    }
-
-    m_parent->buildCompositionNodeLegs();
+    m_parent->buildCompositionNodes();
     m_widget->validate();
+    m_parent->scene()->update();
 }

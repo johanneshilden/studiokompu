@@ -1,4 +1,5 @@
 #include <QGraphicsSceneMouseEvent>
+#include <QDebug>
 #include "compgraphicsscene.h"
 
 CompGraphicsScene::CompGraphicsScene(QObject *parent)
@@ -17,10 +18,17 @@ CompNodeItem *CompGraphicsScene::selectedNodeItem() const
 
 void CompGraphicsScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
-     QGraphicsItem *item = itemAt(event->scenePos().x(), event->scenePos().y());
-     QList<QGraphicsItem *> items = selectedItems();
-     if (!items.isEmpty())
-         items.first()->setSelected(false);
-     if (item)
-         item->setSelected(true);
+    CompNodeItem *item;
+    item = qgraphicsitem_cast<CompNodeItem *>(itemAt(event->scenePos().x(),
+                                                     event->scenePos().y()));
+    QList<QGraphicsItem *> items = selectedItems();
+    if (!items.isEmpty())
+        items.first()->setSelected(false);
+    if (item) {
+        QPointF p = item->scenePos();
+        const qreal s = item->sceneTransform().m22();
+        QRectF box(p.x() - 25 * s, p.y() - 25 * s, 50 * s, 50 * s);
+        if (box.contains(event->scenePos()))
+            item->setSelected(true);
+    }
 }

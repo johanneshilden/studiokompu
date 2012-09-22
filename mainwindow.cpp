@@ -37,8 +37,8 @@ MainWindow::MainWindow(QWidget *parent)
     m_toolBar->addSeparator();
     m_insertLegAction  = m_toolBar->addAction("|");
     m_coordinateAction = m_toolBar->addAction("X");
-    m_toolBar->addSeparator();
-    m_debugDumpAction  = m_toolBar->addAction("dmp");
+//    m_toolBar->addSeparator();
+//    m_debugDumpAction  = m_toolBar->addAction("dmp");
     m_toolBar->addSeparator();
     QAction *undoAction = m_toolBar->addAction(tr("Undo"));
     QAction *redoAction = m_toolBar->addAction(tr("Redo"));
@@ -65,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(m_insertLegAction, SIGNAL(triggered()), m_compWidget, SLOT(insertNodeLeg()));
     connect(m_coordinateAction, SIGNAL(triggered()), m_compWidget, SLOT(showProjectionDialog()));
-    connect(m_debugDumpAction, SIGNAL(triggered()), m_compWidget, SLOT(dumpNode()));
+//    connect(m_debugDumpAction, SIGNAL(triggered()), m_compWidget, SLOT(dumpNode()));
 
     connect(undoAction, SIGNAL(triggered()), m_compWidget->undoStack(), SLOT(undo()));
     connect(redoAction, SIGNAL(triggered()), m_compWidget->undoStack(), SLOT(redo()));
@@ -89,8 +89,6 @@ void MainWindow::updateActions(CompNodeItem *selectedItem)
         disableAllActions();
         return;
     }
-
-    m_debugDumpAction->setEnabled(true);
 
     QList<QAction *>::const_iterator i = m_nodeActions.constBegin();
     for (; i != m_nodeActions.constEnd(); ++i)
@@ -132,7 +130,7 @@ void MainWindow::disableAllActions()
 {
     QList<QAction *> actions = m_toolBar->actions();
     QList<QAction *>::const_iterator i = actions.constBegin();
-    while (i != actions.constEnd() - 6) {
+    while (i != actions.constBegin() + 7) {
         (*i)->setEnabled(false);
         ++i;
     }

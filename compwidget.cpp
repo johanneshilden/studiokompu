@@ -46,7 +46,8 @@ int CompProjectionDialog::val() const
 }
 
 CompGraphicsView::CompGraphicsView(QWidget *parent)
-    : QGraphicsView(parent)
+    : QGraphicsView(parent),
+      m_dragItem(0)
 {
     setAcceptDrops(true);
 }
@@ -76,27 +77,34 @@ void CompGraphicsView::dropEvent(QDropEvent *event)
 
 void CompGraphicsView::mousePressEvent(QMouseEvent *event)
 {
-    if (event->button() == Qt::LeftButton)
+    if (event->button() == Qt::LeftButton) {
+        QGraphicsItem *item = scene()->itemAt(mapToScene(event->pos()));
+        m_dragItem = qgraphicsitem_cast<CompNodeItem *>(item);
         m_dragStartPosition = event->pos();
+    }
 
     QGraphicsView::mousePressEvent(event);
 }
 
 void CompGraphicsView::mouseMoveEvent(QMouseEvent *event)
 {
-    if ((event->buttons() & Qt::LeftButton)) {
-        if ((event->pos() - m_dragStartPosition).manhattanLength() >=
-                QApplication::startDragDistance()) {
+    if (event->buttons() & Qt::LeftButton && m_dragItem &&
+        ((event->pos() - m_dragStartPosition).manhattanLength() >=
+         QApplication::startDragDistance()))
+    {
+        QDrag *drag = new QDrag(this);
+        QMimeData *mimeData = new QMimeData;
 
-            QDrag *drag = new QDrag(this);
-            QMimeData *mimeData = new QMimeData;
+        struct buf *buf = buf_new(64);
+        node_serialize(m_dragItem->node(), buf);
+        buf_nullterm(buf);
 
-            mimeData->setData("text/plain", "[0,0]");
-            drag->setMimeData(mimeData);
+        mimeData->setData("text/plain", buf->data);
+        drag->setMimeData(mimeData);
+        buf_destroy(buf);
 
-            Qt::DropAction dropAction = drag->exec(Qt::CopyAction | Qt::MoveAction);
-
-        }
+        /* Qt::DropAction dropAction = */
+        drag->exec(Qt::CopyAction | Qt::MoveAction);
     }
 
     QGraphicsView::mouseMoveEvent(event);
@@ -282,14 +290,14 @@ void CompWidget::insertNodeLeg()
                                             nodeItem, 0));
 }
 
-void CompWidget::dumpNode()
-{
-    CompNodeItem *nodeItem = m_scene->selectedNodeItem();
-    if (!nodeItem)
-        return;
-    //
-    node_dump(nodeItem->node());
-}
+//void CompWidget::dumpNode()
+//{
+//    CompNodeItem *nodeItem = m_scene->selectedNodeItem();
+//    if (!nodeItem)
+//        return;
+//    //
+//    node_dump(nodeItem->node());
+//}
 
 void CompWidget::compute()
 {

@@ -64,7 +64,7 @@ public:
     QVariant headerData(int, Qt::Orientation orientation, int role) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
 
-    bool dropMimeData(const QMimeData *data, Qt::DropAction dropAction, int, int, const QModelIndex &parent);
+    bool dropMimeData(const QMimeData *data, Qt::DropAction dropAction, int, int, const QModelIndex&);
     QMimeData *mimeData(const QModelIndexList &indexes) const;
 
     Qt::DropActions supportedDropActions() const { return Qt::CopyAction | Qt::MoveAction; }
