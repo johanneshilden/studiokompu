@@ -46,7 +46,8 @@ CompLibWidget::CompLibWidget(QUndoStack *undoStack, QWidget *parent)
     setDefaultDropAction(Qt::MoveAction);
     setAcceptDrops(true);
 
-    connect(m_model, SIGNAL(dataDropped(QString)), this, SLOT(insertDroppedData(QString)));
+    connect(m_model, SIGNAL(dataDropped(QString)),
+            this, SLOT(insertDroppedData(QString)));
 }
 
 void CompLibWidget::insertNodeItem(CompNodeItem *item)

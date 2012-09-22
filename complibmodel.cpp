@@ -50,25 +50,6 @@ CompLibModel::CompLibModel(QObject *parent)
       m_rootNode(new CompLibNode)
 {
     setData(QModelIndex(), QVariant(tr("Function library")));
-
-    //
-
-//    insertRow(0, QModelIndex());
-//    QModelIndex i = index(0, 0);
-//    setData(i, "first row");
-
-//    insertRow(0, QModelIndex());
-//    i = index(0, 0);
-//    setData(i, "another row");
-
-//    insertRow(0, QModelIndex());
-//    i = index(0, 0);
-//    setData(i, "yet another row");
-
-//    //
-
-//    removeRow(0, QModelIndex());
-//    removeRow(0, QModelIndex());
 }
 
 CompLibModel::~CompLibModel()
@@ -225,6 +206,19 @@ QMimeData *CompLibModel::mimeData(const QModelIndexList &indexes) const
         return 0;
 
     QMimeData *data = new QMimeData;
-    data->setText("asdfasdf");
+    /*
+    QString str;
+
+    foreach (QModelIndex index, indexes)  {
+        if (!str.isEmpty())
+            str.append(QChar::LineSeparator);
+        str.append(this->data(index, CompLibModel::NodeDataRole).toString());
+    }
+    data->setText(str);
+    */
+
+    data->setText(this->data(indexes.first(),
+                             CompLibModel::NodeDataRole).toString());
+
     return data;
 }

@@ -4,6 +4,7 @@
 #include <QDebug>
 #include <cassert>
 #include "compnodeitem.h"
+#include "compgraphicsscene.h"
 
 void node_destroy_no_cascade(struct node *n)
 {
@@ -35,7 +36,8 @@ qreal const CompNodeItem::NodeScaleFactor = 0.7;
 
 CompNodeItem::CompNodeItem(struct node *node, QGraphicsItem *parent)
     : QGraphicsItem(parent),
-      m_node(node)
+      m_node(node),
+      m_scene(0)
 {
     switch (nodeType())
     {
@@ -146,9 +148,13 @@ QRectF CompNodeItem::boundingRect() const
 
 void CompNodeItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 {
+    const bool isDropItem = m_scene->dropItem() == this;
+
     QPen pen;
-    if (isSelected())
+    if (isSelected() && !isDropItem)
         pen.setColor(Qt::cyan);
+    else if (isDropItem)
+        pen.setColor(Qt::red);
 
     painter->setPen(pen);
 
@@ -198,6 +204,14 @@ int CompNodeItem::type() const
 CompNodeItem::NodeType CompNodeItem::nodeType() const
 {
     return static_cast<CompNodeItem::NodeType>(m_node->type);
+}
+
+QVariant CompNodeItem::itemChange(GraphicsItemChange change, const QVariant &value)
+{
+    if (QGraphicsItem::ItemSceneChange == change)
+        if (value.canConvert<QGraphicsScene *>())
+            m_scene = static_cast<CompGraphicsScene *>(value.value<QGraphicsScene *>());
+    return QGraphicsItem::itemChange(change, value);
 }
 
 void CompNodeItem::buildCompositionNodeLegs()

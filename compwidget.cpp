@@ -7,6 +7,7 @@
 #include <QSpinBox>
 #include <QDialogButtonBox>
 #include <QUndoStack>
+#include <QApplication>
 #include <QDebug>
 #include <QUndoView>
 #include "compnodeitem.h"
@@ -15,6 +16,7 @@
 #include "commands/replacenodecommand.h"
 #include "commands/insertnodecommand.h"
 #include "commands/setprojectioncoordcommand.h"
+#include "lib/comp_serialize.h"
 
 CompProjectionDialog::CompProjectionDialog(int place, QWidget *parent)
     : QDialog(parent),
@@ -43,9 +45,67 @@ int CompProjectionDialog::val() const
     return m_sb->value();
 }
 
+CompGraphicsView::CompGraphicsView(QWidget *parent)
+    : QGraphicsView(parent)
+{
+    setAcceptDrops(true);
+}
+
+void CompGraphicsView::dragEnterEvent(QDragEnterEvent *event)
+{
+    QGraphicsView::dragEnterEvent(event);
+}
+
+void CompGraphicsView::dragMoveEvent(QDragMoveEvent *event)
+{
+//    const QMimeData *mime = event->mimeData();
+
+    CompGraphicsScene *scene = static_cast<CompGraphicsScene *>(this->scene());
+    CompNodeItem *nodeItem = qgraphicsitem_cast<CompNodeItem *>(itemAt(event->pos()));
+    scene->setDropItem(nodeItem);
+    event->setAccepted(nodeItem);
+    event->setDropAction(Qt::CopyAction);
+    scene->update();
+}
+
+void CompGraphicsView::dropEvent(QDropEvent *event)
+{
+    const QMimeData *mime = event->mimeData();
+    emit dataDropped(mime->text());
+}
+
+void CompGraphicsView::mousePressEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton)
+        m_dragStartPosition = event->pos();
+
+    QGraphicsView::mousePressEvent(event);
+}
+
+void CompGraphicsView::mouseMoveEvent(QMouseEvent *event)
+{
+    if ((event->buttons() & Qt::LeftButton)) {
+        if ((event->pos() - m_dragStartPosition).manhattanLength() >=
+                QApplication::startDragDistance()) {
+
+            QDrag *drag = new QDrag(this);
+            QMimeData *mimeData = new QMimeData;
+
+            mimeData->setData("text/plain", "[0,0]");
+            drag->setMimeData(mimeData);
+
+            Qt::DropAction dropAction = drag->exec(Qt::CopyAction | Qt::MoveAction);
+
+        }
+    }
+
+    QGraphicsView::mouseMoveEvent(event);
+}
+
 CompWidget::CompWidget(QWidget *parent)
     : QWidget(parent),
       m_scene(new CompGraphicsScene(this)),
+      m_view(new CompGraphicsView),
       m_computeButton(new QPushButton(tr("Compute"))),
       m_input(new QLineEdit),
       m_logWindow(new QPlainTextEdit),
@@ -54,7 +114,6 @@ CompWidget::CompWidget(QWidget *parent)
       m_valid(false)
 {
     initUi();
-    setAcceptDrops(true);
 }
 
 CompWidget::~CompWidget()
@@ -75,11 +134,9 @@ void CompWidget::replaceSelectedNode(struct node *node)
         node_destroy(node);
         return;
     }
-
-    ReplaceNodeCommand *command = new ReplaceNodeCommand(this,
-                                                         nodeItem,
-                                                         new CompNodeItem(node));
-    m_undoStack->push(command);
+    m_undoStack->push(new ReplaceNodeCommand(this,
+                                             nodeItem,
+                                             new CompNodeItem(node)));
 }
 
 CompNodeItem *CompWidget::selectedNodeItem() const
@@ -89,7 +146,7 @@ CompNodeItem *CompWidget::selectedNodeItem() const
 
 bool CompWidget::eventFilter(QObject *object, QEvent *event)
 {
-    if (QEvent::KeyPress == event->type()) {
+    if (m_scene == object && QEvent::KeyPress == event->type()) {
         QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
         CompNodeItem *nodeItem = m_scene->selectedNodeItem();
         if (keyEvent && nodeItem) {
@@ -151,14 +208,26 @@ bool CompWidget::eventFilter(QObject *object, QEvent *event)
     return QWidget::eventFilter(object, event);
 }
 
-void CompWidget::dragEnterEvent(QDragEnterEvent *event)
+void CompWidget::insertNodeFromData(QString data)
 {
-    QWidget::dragEnterEvent(event);
-}
-
-void CompWidget::dragMoveEvent(QDragMoveEvent *event)
-{
-    QWidget::dragMoveEvent(event);
+    QByteArray ba = data.toAscii();
+    struct buf *buf = buf_new(1024);
+    buf_append_chars(buf, ba.data());
+    if (node_serial_data_is_valid(buf) < 0) {
+        qWarning() << "Invalid node tree";
+        qDebug() << data;
+        buf_destroy(buf);
+        return;
+    }
+    foreach (QGraphicsItem *item, m_scene->selectedItems())
+        item->setSelected(false);
+    CompNodeItem *item = m_scene->dropItem();
+    if (item) {
+        item->setSelected(true);
+        replaceSelectedNode(node_unserialize(buf));
+    }
+    buf_destroy(buf);
+    m_scene->setDropItem(0);
 }
 
 void CompWidget::insertZeroNode()
@@ -218,7 +287,7 @@ void CompWidget::dumpNode()
     CompNodeItem *nodeItem = m_scene->selectedNodeItem();
     if (!nodeItem)
         return;
-
+    //
     node_dump(nodeItem->node());
 }
 
@@ -229,7 +298,7 @@ void CompWidget::compute()
     QStringList::const_iterator i;
     for (i = arglist.constBegin(); i != arglist.constEnd(); ++i)
         args.push_back((*i).toInt());
-    m_logWindow->appendPlainText(QString::number(m_topNode->compute(args)));
+    m_logWindow->setPlainText(QString::number(m_topNode->compute(args)));
 }
 
 void CompWidget::showProjectionDialog()
@@ -240,10 +309,9 @@ void CompWidget::showProjectionDialog()
 
     struct node_projection *proj = (struct node_projection *) nodeItem->node()->data;
     CompProjectionDialog dialog(proj->place);
-    if (QDialog::Accepted == dialog.exec()) {
-        SetProjectionCoordCommand *command = new SetProjectionCoordCommand(nodeItem, dialog.val() - 1);
-        m_undoStack->push(command);
-    }
+    if (QDialog::Accepted == dialog.exec())
+        m_undoStack->push(new SetProjectionCoordCommand(nodeItem,
+                                                        dialog.val() - 1));
 }
 
 void CompWidget::emitSelectionChanged()
@@ -256,9 +324,8 @@ void CompWidget::initUi()
     m_scene->addItem(m_topNode);
     m_scene->installEventFilter(this);
 
-    QGraphicsView *view = new QGraphicsView;
-    view->setScene(m_scene);
-    view->setRenderHint(QPainter::Antialiasing);
+    m_view->setScene(m_scene);
+    m_view->setRenderHint(QPainter::Antialiasing);
 
     QVBoxLayout *layout = new QVBoxLayout;
     setLayout(layout);
@@ -274,9 +341,10 @@ void CompWidget::initUi()
 
     layout->addLayout(inputLayout);
     layout->addWidget(m_logWindow);
-    layout->addWidget(view);
+    layout->addWidget(m_view);
 
     /*
+    --
     */
     QUndoView *uv = new QUndoView(m_undoStack);
     uv->setMaximumHeight(80);
@@ -287,6 +355,7 @@ void CompWidget::initUi()
     connect(m_computeButton, SIGNAL(clicked()), this, SLOT(compute()));
     connect(m_scene, SIGNAL(selectionChanged()), this, SLOT(emitSelectionChanged()));
     connect(this, SIGNAL(validStateChanged(bool)), m_computeButton, SLOT(setEnabled(bool)));
+    connect(m_view, SIGNAL(dataDropped(QString)), this, SLOT(insertNodeFromData(QString)));
 
     emit validStateChanged(m_topNode && m_topNode->isValid());
 }

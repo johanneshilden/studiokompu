@@ -16,6 +16,8 @@ void node_destroy_no_cascade(struct node *n);
 //    void operator ()(struct node *node) { node_destroy_no_cascade(node); }
 //};
 
+class CompGraphicsScene;
+
 class CompNodeItem : public QGraphicsItem
 {
 public:
@@ -52,6 +54,9 @@ public:
 
     inline QList<CompNodeItem *> childNodes() const { return m_childNodes; }
 
+protected:
+    QVariant itemChange(GraphicsItemChange change, const QVariant &value);
+
 private:
     friend class ReplaceNodeCommand;
     friend class InsertNodeCommand;
@@ -61,9 +66,8 @@ private:
     void buildSearchNodeLeg();
 
     struct node *m_node;
+    CompGraphicsScene *m_scene;
     QList<CompNodeItem *> m_childNodes;
 };
-
-Q_DECLARE_METATYPE(CompNodeItem *)
 
 #endif // COMPNODEITEM_H

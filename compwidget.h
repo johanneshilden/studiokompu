@@ -3,6 +3,10 @@
 
 #include <QWidget>
 #include <QDialog>
+#include <QGraphicsView>
+
+#include <QDebug>
+#include <QDragEnterEvent>
 
 class QSpinBox;
 
@@ -18,11 +22,34 @@ private:
     QSpinBox *const m_sb;
 };
 
-class CompGraphicsScene;
+class CompGraphicsView : public QGraphicsView
+{
+    Q_OBJECT
+
+public:
+    explicit CompGraphicsView(QWidget *parent = 0);
+
+protected:
+    void dragEnterEvent(QDragEnterEvent *event);
+    void dragMoveEvent(QDragMoveEvent *event);
+    void dropEvent(QDropEvent *event);
+
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
+
+signals:
+    void dataDropped(QString);
+
+private:
+    QPoint m_dragStartPosition;
+};
+
 class QPushButton;
 class QLineEdit;
 class QPlainTextEdit;
+class QGraphicsView;
 class QUndoStack;
+class CompGraphicsScene;
 class CompNodeItem;
 
 class CompWidget : public QWidget
@@ -43,14 +70,13 @@ public:
 
 protected:
     bool eventFilter(QObject *object, QEvent *event);
-    void dragEnterEvent(QDragEnterEvent *event);
-    void dragMoveEvent(QDragMoveEvent *event);
 
 signals:
     void selectionChanged(CompNodeItem *);
     void validStateChanged(bool);
 
 protected slots:
+    void insertNodeFromData(QString data);
     void insertZeroNode();
     void insertSuccNode();
     void insertInvalidNode();
@@ -70,6 +96,7 @@ private:
     void initUi();
 
     CompGraphicsScene *const m_scene;
+    CompGraphicsView  *const m_view;
     QPushButton       *const m_computeButton;
     QLineEdit         *const m_input;
     QPlainTextEdit    *const m_logWindow;

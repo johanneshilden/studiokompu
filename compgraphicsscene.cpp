@@ -2,7 +2,8 @@
 #include "compgraphicsscene.h"
 
 CompGraphicsScene::CompGraphicsScene(QObject *parent)
-    : QGraphicsScene(parent)
+    : QGraphicsScene(parent),
+      m_dropItem(0)
 {
 }
 
